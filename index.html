@@ -2082,8 +2082,7 @@ class Component extends DCLogic {
     if (!res) return;
     const fmt = (s, add) => { const d = this.parse(s); if (add) d.setDate(d.getDate() + 1); return d.getFullYear() + this.pad(d.getMonth() + 1) + this.pad(d.getDate()); };
     const loc = this.props.locationLabel || 'Barcelone';
-    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Casa Charly//FR','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:casa-' + res.id + '@charly','DTSTART;VALUE=DATE:' + fmt(res.start, false),'DTEND;VALUE=DATE:' + fmt(res.end, true),'SUMMARY:Séjour chez ' + (this.props.ownerName || 'Charly') + ' · Barcelone','LOCATION:' + loc,'END:VEVENT','END:VCALENDAR'].join('
-');
+    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Casa Charly//FR','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:casa-' + res.id + '@charly','DTSTART;VALUE=DATE:' + fmt(res.start, false),'DTEND;VALUE=DATE:' + fmt(res.end, true),'SUMMARY:Séjour chez ' + (this.props.ownerName || 'Charly') + ' · Barcelone','LOCATION:' + loc,'END:VEVENT','END:VCALENDAR'].join('\r\n');
     try {
       const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
