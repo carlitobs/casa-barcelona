@@ -495,7 +495,7 @@ class Component extends DCLogic {
   addToCalendar(res) {
     if (!res) return;
     const fmt = (s, add) => { const d = this.parse(s); if (add) d.setDate(d.getDate() + 1); return d.getFullYear() + this.pad(d.getMonth() + 1) + this.pad(d.getDate()); };
-    const loc = this.props.locationLabel || 'Barcelone';
+    const loc = this.props.locationLabel || 'Travessera de Dalt, 72 · Gràcia';
     const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Casa Charly//FR', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:casa-' + res.id + '@charly', 'DTSTART;VALUE=DATE:' + fmt(res.start, false), 'DTEND;VALUE=DATE:' + fmt(res.end, true), 'SUMMARY:Séjour chez ' + (this.props.ownerName || 'Charly') + ' · Barcelone', 'LOCATION:' + loc, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
     try {
       const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
@@ -713,8 +713,8 @@ class Component extends DCLogic {
     return {
       primary,
       ownerName: this.props.ownerName || 'Charly',
-      locationLabel: this.props.locationLabel || 'Barcelone · Gràcia',
-      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(this.props.locationLabel || 'Barcelone · Gràcia'),
+      locationLabel: this.props.locationLabel || 'Travessera de Dalt, 72 · Gràcia',
+      mapsUrl: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(this.props.locationLabel || 'Travessera de Dalt, 72 · Gràcia'),
       monthLabel: this.monthsCap[view.m] + ' ' + view.y,
       weeks: this.buildCells(),
       shardsTop: this.shardsTop,
