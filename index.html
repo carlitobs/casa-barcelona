@@ -210,12 +210,12 @@
         <div>
           <div style="display:flex;align-items:center;gap:11px;">
             <div style="flex:1;">
-              <div style="font-weight:700;font-size:18px;color:oklch(0.30 0.03 45);">{{ ownerName }}</div>
+              <div style="font-weight:700;font-size:18px;color:oklch(0.30 0.03 45);">Sit down, relax and... Barcelona</div>
               <div style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:oklch(0.55 0.02 60);"><span style="font-size:11px;">📍</span><a href="{{ mapsUrl }}" target="_blank" rel="noopener" style="color:{{ primary }};text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:1px;">{{ locationLabel }}</a></div>
             </div>
             <button onclick="{{ share }}" style="flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid {{ primary }};background:transparent;color:{{ primary }};border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;"><span style="font-size:14px;">↗</span>Partager</button>
           </div>
-          <div style="font-size:12.5px;color:oklch(0.55 0.02 60);margin-top:14px;line-height:1.45;">Les créneaux déjà réservés sont bloqués automatiquement. Sur les dates en <span style="color:oklch(0.42 0.10 142);">vert</span>, Charly est absent : tu as l'appart rien que pour toi !</div>
+          <div style="font-size:12.5px;color:oklch(0.55 0.02 60);margin-top:14px;line-height:1.45;">Les créneaux déjà réservés sont bloqués automatiquement. Sur les dates en <span style="color:oklch(0.42 0.10 142);">vert</span>, {{ ownerName }} est absent : tu as l'appart rien que pour toi !</div>
         </div>
       </sc-if>
       <sc-if value="{{ isOwner }}" hint-placeholder-val="{{ false }}">
