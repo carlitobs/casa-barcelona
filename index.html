@@ -248,7 +248,7 @@
     </div>
 
     <!-- weeks grid (swipe between months) -->
-    <div ontouchstart="{{ onTouchStart }}" ontouchend="{{ onTouchEnd }}" style="padding:8px 22px 0;">
+    <div id="cal-grid" style="padding:8px 22px 0;">
       <sc-for list="{{ weeks }}" as="week" hint-placeholder-count="6">
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px;">
           <sc-for list="{{ week.cells }}" as="cell" hint-placeholder-count="7">
@@ -470,6 +470,19 @@ class Component extends DCLogic {
       const data = await res.json();
       this.setState({ reservations: data.reservations, absences: data.absences });
     } catch(e) { this.flash('Erreur de connexion', 'warn'); }
+    // Swipe to change month
+    const grid = document.getElementById('cal-grid');
+    if (grid) {
+      let sx = null, sy = null;
+      grid.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+      grid.addEventListener('touchend', (e) => {
+        if (sx === null) return;
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) this.go(dx > 0 ? 1 : -1);
+        sx = null;
+      }, { passive: true });
+    }
   }
 
   saveMine(mine) {
