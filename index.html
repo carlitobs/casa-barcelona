@@ -577,51 +577,130 @@ class Component extends DCLogic {
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    const pieces = Array.from({length: 80}, () => ({
-      x: Math.random() * canvas.width,
-      y: -10 - Math.random() * 100,
-      r: 4 + Math.random() * 6,
-      d: 1.5 + Math.random() * 2,
-      color: ['#c4623d','#e0a13a','#2f8f7f','#3f72a8','#8a4a6b','#f7efe0'][Math.floor(Math.random()*6)],
-      tilt: Math.random() * 10 - 5,
-      tiltSpeed: 0.1 + Math.random() * 0.1
+    const W = canvas.width, H = canvas.height;
+    const COLORS = ['#c4623d','#e0a13a','#2f8f7f','#3f72a8','#8a4a6b','#f7efe0','#ff6b6b','#ffe066','#66ffcc','#fff'];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+
+    // Confetti pieces
+    const pieces = Array.from({length: 120}, () => ({
+      x: rnd(0, W), y: rnd(-200, -10),
+      r: rnd(4, 8), d: rnd(1.5, 3.5),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      tilt: rnd(-10, 10), tiltSpeed: rnd(0.05, 0.15),
+      wave: rnd(0, Math.PI * 2), waveSpeed: rnd(0.02, 0.05)
     }));
+
+    // Firework particles
+    const fireworks = [];
+    const explode = (x, y) => {
+      const count = 60 + Math.floor(Math.random() * 40);
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + rnd(-0.1, 0.1);
+        const speed = rnd(2, 9);
+        fireworks.push({
+          x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          alpha: 1, r: rnd(2, 4),
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          decay: rnd(0.012, 0.022), gravity: 0.12, trail: []
+        });
+      }
+    };
+
+    // Launch fireworks at intervals
+    const launches = [
+      { t: 5,  x: rnd(W*0.2, W*0.4), y: rnd(H*0.1, H*0.3) },
+      { t: 25, x: rnd(W*0.5, W*0.8), y: rnd(H*0.1, H*0.25) },
+      { t: 50, x: rnd(W*0.1, W*0.5), y: rnd(H*0.15, H*0.35) },
+      { t: 75, x: rnd(W*0.4, W*0.9), y: rnd(H*0.05, H*0.2) },
+      { t: 100,x: rnd(W*0.2, W*0.7), y: rnd(H*0.1, H*0.3) },
+      { t: 130,x: rnd(W*0.1, W*0.9), y: rnd(H*0.08, H*0.28) },
+      { t: 160,x: rnd(W*0.2, W*0.8), y: rnd(H*0.1, H*0.3) },
+    ];
+
     let frame = 0;
+    const TOTAL = 220;
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        p.y += p.d; p.tilt += p.tiltSpeed;
+      ctx.clearRect(0, 0, W, H);
+
+      // Launch fireworks on schedule
+      launches.forEach(l => { if (frame === l.t) explode(l.x, l.y); });
+
+      // Draw fireworks
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+        const p = fireworks[i];
+        p.trail.push({ x: p.x, y: p.y, alpha: p.alpha });
+        if (p.trail.length > 5) p.trail.shift();
+        p.trail.forEach((t, ti) => {
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, p.r * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = t.alpha * (ti / p.trail.length) * 0.4;
+          ctx.fill();
+        });
         ctx.beginPath();
-        ctx.ellipse(p.x + Math.sin(p.tilt) * 8, p.y, p.r, p.r * 0.4, p.tilt, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        p.x += p.vx; p.y += p.vy;
+        p.vy += p.gravity; p.vx *= 0.98;
+        p.alpha -= p.decay;
+        if (p.alpha <= 0) fireworks.splice(i, 1);
+      }
+
+      // Draw confetti
+      pieces.forEach(p => {
+        if (p.y > H + 20) return;
+        p.wave += p.waveSpeed;
+        p.y += p.d; p.tilt += p.tiltSpeed;
+        ctx.globalAlpha = Math.min(1, (TOTAL - frame) / 40);
+        ctx.beginPath();
+        ctx.ellipse(p.x + Math.sin(p.wave) * 10, p.y, p.r, p.r * 0.4, p.tilt, 0, Math.PI * 2);
         ctx.fillStyle = p.color; ctx.fill();
+        ctx.globalAlpha = 1;
       });
+
       frame++;
-      if (frame < 120) requestAnimationFrame(animate);
+      if (frame < TOTAL) requestAnimationFrame(animate);
       else document.body.removeChild(canvas);
     };
     requestAnimationFrame(animate);
 
     // VAAAAMOS text
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap');
+      @keyframes vamos-in { 0% { transform: scale(0) rotate(-15deg); opacity:0; } 60% { transform: scale(1.25) rotate(4deg); opacity:1; } 80% { transform: scale(0.92) rotate(-2deg); } 100% { transform: scale(1.05) rotate(1deg); opacity:1; } }
+      @keyframes vamos-flash { 0%,100% { color: #fff; text-shadow: 0 0 40px #c4623d, 0 0 80px #e0a13a, 4px 4px 0 #c4623d; } 25% { color: #ffe066; text-shadow: 0 0 40px #fff, 0 0 80px #e0a13a, 4px 4px 0 #3f72a8; } 50% { color: #ff6b6b; text-shadow: 0 0 40px #8a4a6b, 0 0 80px #c4623d, 4px 4px 0 #2f8f7f; } 75% { color: #66ffcc; text-shadow: 0 0 40px #2f8f7f, 0 0 80px #3f72a8, 4px 4px 0 #e0a13a; } }
+      @keyframes vamos-shake { 0%,100% { transform: scale(1.05) rotate(1deg) translateX(0); } 20% { transform: scale(1.05) rotate(-2deg) translateX(-6px); } 40% { transform: scale(1.05) rotate(3deg) translateX(6px); } 60% { transform: scale(1.05) rotate(-1deg) translateX(-4px); } 80% { transform: scale(1.05) rotate(2deg) translateX(4px); } }
+      @keyframes vamos-out { 0% { transform: scale(1.05) rotate(1deg); opacity:1; } 100% { transform: scale(2.5) rotate(8deg); opacity:0; filter: blur(12px); } }
+      #vamos-overlay { position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10000;background:rgba(0,0,0,0.15); }
+      #vamos-text { font-family:'Black Ops One',system-ui,sans-serif;font-size:72px;font-weight:900;color:#fff;text-align:center;line-height:1;letter-spacing:2px;animation: vamos-in 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      #vamos-text.flash { animation: vamos-flash 0.3s ease infinite, vamos-shake 0.4s ease infinite; }
+      #vamos-text.out { animation: vamos-out 0.5s ease forwards; }
+      #vamos-sub { font-family:system-ui,sans-serif;font-size:22px;margin-top:12px;opacity:0;transform:translateY(10px);transition:all 0.3s ease;color:#fff;font-weight:700;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,0.3); }
+      #vamos-sub.show { opacity:1;transform:translateY(0); }
+    `;
+    document.head.appendChild(style);
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10000;';
-    overlay.innerHTML = '<div id="vamos-text" style="font-family:system-ui,sans-serif;font-size:64px;font-weight:900;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.25);letter-spacing:-2px;transform:scale(0) rotate(-8deg);opacity:0;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">VAAAAMOS! 🎉</div>';
+    overlay.id = 'vamos-overlay';
+    overlay.innerHTML = '<div style="text-align:center"><div id="vamos-text">VAAAAMOS! 🔥</div></div>';
     document.body.appendChild(overlay);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const t = overlay.querySelector('#vamos-text');
-        t.style.transform = 'scale(1) rotate(-4deg)';
-        t.style.opacity = '1';
-        setTimeout(() => {
-          t.style.transition = 'transform 0.4s cubic-bezier(0.4,0,1,1),opacity 0.3s ease';
-          t.style.transform = 'scale(1.15) rotate(2deg)';
-          setTimeout(() => {
-            t.style.transform = 'scale(0.9) rotate(-2deg)';
-            t.style.opacity = '0';
-            setTimeout(() => document.body.removeChild(overlay), 400);
-          }, 600);
-        }, 800);
-      });
-    });
+    setTimeout(() => {
+      const t = document.getElementById('vamos-text');
+      if (t) t.classList.add('flash');
+    }, 500);
+    setTimeout(() => {
+      const t = document.getElementById('vamos-text');
+      if (t) { t.classList.remove('flash'); t.classList.add('out'); }
+      overlay.style.transition = 'opacity 0.5s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(overlay);
+        document.head.removeChild(style);
+      }, 500);
+    }, 4000);
   }
 
   share() {
