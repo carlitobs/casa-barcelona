@@ -247,21 +247,6 @@
     </div>
     </div>
 
-    <!-- weather strip -->
-    <sc-if value="{{ weather.length }}" hint-placeholder-val="{{ 0 }}">
-      <div style="padding:8px 22px 4px;overflow-x:auto;scrollbar-width:none;">
-        <div style="display:flex;gap:6px;width:max-content;">
-          <sc-for list="{{ weather }}" as="w" hint-placeholder-count="7">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;background:oklch(0.96 0.018 72);border-radius:12px;padding:7px 10px;min-width:44px;">
-              <div style="font-size:10px;color:oklch(0.58 0.02 60);font-weight:600;">{{ w.day }}</div>
-              <div style="font-size:18px;line-height:1;">{{ w.emoji }}</div>
-              <div style="font-size:11px;font-weight:700;color:oklch(0.34 0.04 45);">{{ w.max }}</div>
-            </div>
-          </sc-for>
-        </div>
-      </div>
-    </sc-if>
-
     <!-- weeks grid (swipe between months) -->
     <div id="cal-grid" style="padding:8px 22px 0;">
       <sc-for list="{{ weeks }}" as="week" hint-placeholder-count="6">
@@ -412,7 +397,27 @@
       </div>
     </sc-if>
 
-        <!-- ============ Venir à Barcelone ============ -->
+        <!-- weather strip -->
+    <sc-if value="{{ isVisitor }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ weather.length }}" hint-placeholder-val="{{ 0 }}">
+        <div style="padding:8px 22px 4px;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:oklch(0.55 0.02 60);margin-bottom:10px;">Météo à Barcelone</div>
+          <div style="overflow-x:auto;scrollbar-width:none;">
+            <div style="display:flex;gap:6px;width:max-content;">
+              <sc-for list="{{ weather }}" as="w" hint-placeholder-count="7">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;border-radius:12px;padding:8px 10px;min-width:44px;box-shadow:0 2px 8px rgba(60,40,20,.07);">
+                  <div style="font-size:10px;color:oklch(0.58 0.02 60);font-weight:600;">{{ w.day }}</div>
+                  <div style="font-size:20px;line-height:1.2;">{{ w.emoji }}</div>
+                  <div style="font-size:11px;font-weight:700;color:oklch(0.34 0.04 45);">{{ w.max }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- ============ Venir à Barcelone ============ -->
     <sc-if value="{{ isVisitor }}" hint-placeholder-val="{{ true }}">
       <div style="padding:8px 22px 4px;">
         <div style="font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:oklch(0.55 0.02 60);margin-bottom:12px;">Venir à Barcelone</div>
