@@ -247,6 +247,21 @@
     </div>
     </div>
 
+    <!-- weather strip -->
+    <sc-if value="{{ weather.length }}" hint-placeholder-val="{{ 0 }}">
+      <div style="padding:8px 22px 4px;overflow-x:auto;scrollbar-width:none;">
+        <div style="display:flex;gap:6px;width:max-content;">
+          <sc-for list="{{ weather }}" as="w" hint-placeholder-count="7">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;background:oklch(0.96 0.018 72);border-radius:12px;padding:7px 10px;min-width:44px;">
+              <div style="font-size:10px;color:oklch(0.58 0.02 60);font-weight:600;">{{ w.day }}</div>
+              <div style="font-size:18px;line-height:1;">{{ w.emoji }}</div>
+              <div style="font-size:11px;font-weight:700;color:oklch(0.34 0.04 45);">{{ w.max }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
     <!-- weeks grid (swipe between months) -->
     <div id="cal-grid" style="padding:8px 22px 0;">
       <sc-for list="{{ weeks }}" as="week" hint-placeholder-count="6">
@@ -459,7 +474,8 @@ class Component extends DCLogic {
       mine: [],
       lastBooked: null,
       reservations: [],
-      absences: []
+      absences: [],
+      weather: []
     };
   }
 
@@ -470,6 +486,24 @@ class Component extends DCLogic {
       const data = await res.json();
       this.setState({ reservations: data.reservations, absences: data.absences });
     } catch(e) { this.flash('Erreur de connexion', 'warn'); }
+    // Weather forecast for Barcelona (41.3851, 2.1734)
+    try {
+      const wr = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.3851&longitude=2.1734&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Europe%2FMadrid&forecast_days=7');
+      const wd = await wr.json();
+      const codes = wd.daily.weathercode;
+      const emoji = (c) => c === 0 ? '☀️' : c <= 2 ? '🌤️' : c <= 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 57 ? '🌧️' : c <= 67 ? '🌨️' : c <= 77 ? '❄️' : c <= 82 ? '🌧️' : c <= 86 ? '⛈️' : '⛈️';
+      const days = ['dim','lun','mar','mer','jeu','ven','sam'];
+      const weather = wd.daily.time.map((t, i) => {
+        const d = new Date(t);
+        return {
+          key: t,
+          day: days[d.getDay()],
+          emoji: emoji(codes[i]),
+          max: Math.round(wd.daily.temperature_2m_max[i]) + '°'
+        };
+      });
+      this.setState({ weather });
+    } catch(e) {}
     // Swipe to change month
     const grid = document.getElementById('cal-grid');
     if (grid) {
@@ -529,6 +563,60 @@ class Component extends DCLogic {
     const dy = e.changedTouches[0].clientY - this._sy;
     if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) this.go(dx > 0 ? 1 : -1);
     this._sx = null;
+  }
+
+  launchConfetti() {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const pieces = Array.from({length: 80}, () => ({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 100,
+      r: 4 + Math.random() * 6,
+      d: 1.5 + Math.random() * 2,
+      color: ['#c4623d','#e0a13a','#2f8f7f','#3f72a8','#8a4a6b','#f7efe0'][Math.floor(Math.random()*6)],
+      tilt: Math.random() * 10 - 5,
+      tiltSpeed: 0.1 + Math.random() * 0.1
+    }));
+    let frame = 0;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.y += p.d; p.tilt += p.tiltSpeed;
+        ctx.beginPath();
+        ctx.ellipse(p.x + Math.sin(p.tilt) * 8, p.y, p.r, p.r * 0.4, p.tilt, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.fill();
+      });
+      frame++;
+      if (frame < 120) requestAnimationFrame(animate);
+      else document.body.removeChild(canvas);
+    };
+    requestAnimationFrame(animate);
+
+    // VAAAAMOS text
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10000;';
+    overlay.innerHTML = '<div id="vamos-text" style="font-family:system-ui,sans-serif;font-size:64px;font-weight:900;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.25);letter-spacing:-2px;transform:scale(0) rotate(-8deg);opacity:0;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">VAAAAMOS! 🎉</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const t = overlay.querySelector('#vamos-text');
+        t.style.transform = 'scale(1) rotate(-4deg)';
+        t.style.opacity = '1';
+        setTimeout(() => {
+          t.style.transition = 'transform 0.4s cubic-bezier(0.4,0,1,1),opacity 0.3s ease';
+          t.style.transform = 'scale(1.15) rotate(2deg)';
+          setTimeout(() => {
+            t.style.transform = 'scale(0.9) rotate(-2deg)';
+            t.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(overlay), 400);
+          }, 600);
+        }, 800);
+      });
+    });
   }
 
   share() {
@@ -604,6 +692,7 @@ class Component extends DCLogic {
 
   onDay(s) {
     if (s < this.TODAY) return;
+    if (navigator.vibrate) navigator.vibrate(8);
     if (this.state.mode === 'owner') return this.onOwnerDay(s);
     if (this.isBooked(s)) { this.flash('Ce jour est déjà réservé', 'warn'); return; }
     let { selStart, selEnd } = this.state;
@@ -654,6 +743,7 @@ class Component extends DCLogic {
       this.setState({ mine: nextMine, lastBooked: newRes, selStart: null, selEnd: null });
       this.saveMine(nextMine);
       await this.syncData();
+      this.launchConfetti();
     } catch(e) { this.flash('Erreur de connexion', 'warn'); }
   }
 
@@ -809,7 +899,8 @@ class Component extends DCLogic {
         .filter(r => mine.indexOf(r.id) >= 0 && r.end >= this.TODAY)
         .sort((a, b) => a.start < b.start ? -1 : 1)
         .map(r => { const v = recapOf(r); return { key: 'm' + r.id, range: v.range, month: v.month, label: v.label, onCancel: () => this.cancelMine(r.id) }; }),
-      absList
+      absList,
+      weather: this.state.weather
     };
   }
 }
