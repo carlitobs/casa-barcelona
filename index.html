@@ -691,6 +691,8 @@ class Component extends DCLogic {
     while (cells.length % 7 !== 0) cells.push(blank('p' + cells.length));
     const weeks = [];
     for (let i = 0; i < cells.length; i += 7) weeks.push({ key: 'w' + i, cells: cells.slice(i, i + 7) });
+    // Always pad to 6 rows so height stays constant
+    while (weeks.length < 6) weeks.push({ key: 'wx' + weeks.length, cells: Array.from({length: 7}, (_, i) => blank('e' + weeks.length + i)) });
     return weeks;
   }
 
